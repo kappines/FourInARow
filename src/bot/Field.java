@@ -17,7 +17,10 @@
 
 package bot;
 
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * Field class
@@ -123,7 +126,98 @@ public class Field {
 	}
 	
 	/**
+	 * returns minimum number of discs to add in order to make a vertical win if disc is placed in "column"
+	 * discards (returns -1) if chain can not attain 4 in the future
+	 * @param column
+	 * @param disc
+	 * @return
+	 */
+	public int verticalTurnsToWin(int column, int row, int disc){
+		int chainLength = 0;
+		int potentialChain = 0;
+		int score = 0;
+		Queue<Integer> queue = new LinkedList<>();
+
+		for(int r = 0; r < mRows; r++) {			
+			int currDisc = getDisc(column, r);
+			if(currDisc == 0){
+				potentialChain++;
+			} else if (currDisc == disc) {
+				if (r == row)
+				chainLength++;
+				potentialChain++;
+			} else {
+				break;
+			}
+		}
+		
+		if(potentialChain >= 4){
+			score = 4 - chainLength;
+			return score;
+		}
+		return -1;
+	}
+	
+	public int horizontalTurnsToWin(int column, int row, int disc){
+		int chainLength = 0;
+		//int potentialChain = 0;
+		boolean chainContainsDisc = false;
+		boolean stopChain = false;
+		int score = 0;
+		int currChainScore = 0;
+		int minScore = 0;
+		Queue<Integer> queue = new LinkedList<>();
+		
+		for(int c = 0; c < mCols; c++) {			
+			int currDisc = getDisc(c, row);
+			
+			if(currDisc == disc || currDisc == 0){
+				//potentialChain++;
+				
+				score = (c == column) ? 0 : row - rowIfAddDisc(c);
+				queue.add(score);
+				currChainScore += score;
+				if(queue.size() == 4){
+					minScore = currChainScore;
+				} else if(queue.size() > 4){
+					currChainScore -= queue.poll();
+					minScore = Math.min(minScore, currChainScore);
+				}
+				
+				if (currDisc == disc) {
+					if (c == column){
+						chainContainsDisc = true;
+					}
+					if (!stopChain)
+						chainLength++;
+				} else if(currDisc == 0){
+					if(chainContainsDisc){
+						stopChain = true;
+					} else {
+						chainLength = 0;
+					}
+				}
+			} else if(!chainContainsDisc) {
+				chainLength = 0;
+				//potentialChain = 0;
+				queue.clear();
+			}
+			
+			if(currDisc != 0 && currDisc != disc && chainContainsDisc)
+				break;	
+		}
+		
+		//if(potentialChain >= 4)
+			//return chainLength;
+		if(queue.size() >= 4)
+			return minScore;
+		return -1;
+	}
+	
+	
+	/**
 	 * returns length of max chain containing the disc added in "column"
+	 * discards (returns 1) if chain can not attain 4 in the future
 	 * @param column
 	 * @param disc
 	 * @return
