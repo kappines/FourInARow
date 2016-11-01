@@ -125,6 +125,12 @@ public class Field {
 		return -1;
 	}
 	
+	/**
+	 * check if there's a vertical win
+	 * @param column
+	 * @param disc
+	 * @return
+	 */
 	public boolean verticalWin(int column, int disc){
 		int chainLength = 0;
 		int maxChainLength = 0;
@@ -202,7 +208,6 @@ public class Field {
 			if(currDisc == 0){
 				potentialChain++;
 			} else if (currDisc == disc) {
-				if (r == row)
 				chainLength++;
 				potentialChain++;
 			} else {
@@ -212,6 +217,7 @@ public class Field {
 		
 		if(potentialChain >= 4){
 			score = 4 - chainLength;
+			System.err.println("v: " + score);
 			return score;
 		}
 		return Integer.MAX_VALUE;
@@ -254,8 +260,10 @@ public class Field {
 				break;	
 		}
 		
-		if(queue.size() >= 4)
+		if(queue.size() >= 4) {
+			System.err.println("h: " + minScore);
 			return minScore;
+		}
 		return Integer.MAX_VALUE;
 	}
 	
@@ -307,8 +315,10 @@ public class Field {
 			r++;
 		}
 		
-		if(queue.size() >= 4)
+		if(queue.size() >= 4) {
+			System.err.println("d: " + minScore);
 			return minScore;
+		}
 		return Integer.MAX_VALUE;
 	}
 	
@@ -359,8 +369,10 @@ public class Field {
 			r--;
 		}
 		
-		if(queue.size() >= 4)
+		if(queue.size() >= 4) {
+			System.err.println("a: " + minScore);
 			return minScore;
+		}
 		return Integer.MAX_VALUE;
 	}
 	

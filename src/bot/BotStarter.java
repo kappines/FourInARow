@@ -43,6 +43,7 @@ public class BotStarter {
 		int ennemyBotId = BotParser.mBotId % 2 + 1;
 		
 		for(int column = 0; column < field.getNrColumns() && priority > 0; column++){
+			System.err.println("\n" + "Examining column: " + column);
 			if(!(field.isColumnFull(column))){				
 				int row = field.rowIfAddDisc(column);
 				
@@ -55,6 +56,7 @@ public class BotStarter {
 						|| cloneField.descendingDiagonalWin(column, row, BotParser.mBotId)) {
 					move = column;
 					priority = 0;
+					System.err.println("winning");
 				} else {
 					//go if blocks ennemy easy win
 					Field ennemyCloneField = new Field(field);
@@ -65,6 +67,7 @@ public class BotStarter {
 						|| ennemyCloneField.descendingDiagonalWin(column, row, ennemyBotId)) {
 						move = column;
 						priority = 1;
+						System.err.println("not losing");
 					} else if(priority > 1) {
 						//check if move will not help ennemy win on next turn
 						if(!cloneField.isColumnFull(column)){
@@ -74,8 +77,10 @@ public class BotStarter {
 							if (futureField.verticalWin(column, ennemyBotId)
 									|| futureField.horizontalWin(futureRow, ennemyBotId)
 									|| futureField.ascendingDiagonalWin(column, futureRow, ennemyBotId)
-									|| futureField.descendingDiagonalWin(column, futureRow, ennemyBotId))
+									|| futureField.descendingDiagonalWin(column, futureRow, ennemyBotId)){
+								System.err.println("Don't play, helps ennemy win");
 								continue;
+							}
 						}
 						
 						//if it's ok, check if it is a better move than before
@@ -84,16 +89,18 @@ public class BotStarter {
 										cloneField.horizontalTurnsToWin(column, row, BotParser.mBotId)),
 								Math.min(cloneField.ascendingDiagonalTurnsToWin(column, row, BotParser.mBotId),
 										cloneField.descendingDiagonalTurnsToWin(column, row, BotParser.mBotId)));
+						System.err.println("minimum turns to win: " + minPlayerTurnsToWin);
 						if(minPlayerTurnsToWin < Integer.MAX_VALUE && priority > minPlayerTurnsToWin + 1){
 							move = column;
 							priority = minPlayerTurnsToWin + 1;
+							System.err.println("Priority changed to " + priority);
 						}
 					}
 				}
 			}
 		}
-		//System.out.println("move = " + move);
 		if(move == -1){
+			System.err.println("No decent move, picking valid move...");
 			move = 0;
 			while(field.isColumnFull(move)){
 				move++;
