@@ -67,19 +67,6 @@ public class BotStarter {
 				Field cloneField = new Field(field);
 				cloneField.addDisc(column, BotParser.mBotId);
 				
-				if(!cloneField.isColumnFull(column)){
-					//if making this move lets the opponent win on the next turn, do not play it
-					Field futureField = new Field(cloneField);
-					int futureRow = futureField.rowIfAddDisc(column);
-					futureField.addDisc(column, ennemyBotId);
-					int maxEnnemy = Math.max(Math.max(futureField.verticalChain(column, futureRow, ennemyBotId),
-							futureField.horizontalChain(column, futureRow, ennemyBotId)),
-							futureField.diagonalChain(column, futureRow, ennemyBotId));
-					//System.out.println(maxEnnemy + "\n");
-					if (maxEnnemy >= 4)
-						continue;
-				}
-				
 				int maxPlayerChain = Math.max(Math.max(cloneField.verticalChain(column, row, BotParser.mBotId),
 						cloneField.horizontalChain(column, row, BotParser.mBotId)),
 						cloneField.diagonalChain(column, row, BotParser.mBotId));
@@ -91,6 +78,19 @@ public class BotStarter {
 					priority = 1;
 					//System.out.println("priority : 1");
 				} else if (priority > 2) {
+					
+					if(!cloneField.isColumnFull(column)){
+						//if making this move lets the opponent win on the next turn, do not play it
+						Field futureField = new Field(cloneField);
+						int futureRow = futureField.rowIfAddDisc(column);
+						futureField.addDisc(column, ennemyBotId);
+						int maxEnnemy = Math.max(Math.max(futureField.verticalChain(column, futureRow, ennemyBotId),
+								futureField.horizontalChain(column, futureRow, ennemyBotId)),
+								futureField.diagonalChain(column, futureRow, ennemyBotId));
+						//System.out.println(maxEnnemy + "\n");
+						if (maxEnnemy >= 4)
+							continue;
+					}
 					
 					//System.out.println();
 					cloneField = new Field(field);
