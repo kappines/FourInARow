@@ -159,10 +159,7 @@ public class Field {
 	}
 	
 	public int horizontalTurnsToWin(int column, int row, int disc){
-		int chainLength = 0;
-		//int potentialChain = 0;
 		boolean chainContainsDisc = false;
-		boolean stopChain = false;
 		int score = 0;
 		int currChainScore = 0;
 		int minScore = 0;
@@ -170,11 +167,14 @@ public class Field {
 		
 		for(int c = 0; c < mCols; c++) {			
 			int currDisc = getDisc(c, row);
-			
 			if(currDisc == disc || currDisc == 0){
-				//potentialChain++;
-				
-				score = (c == column) ? 0 : row - rowIfAddDisc(c);
+				if(c == column){
+					score = 0;
+					if(currDisc == disc)
+						chainContainsDisc = true;
+				} else {
+					score = row - rowIfAddDisc(c);
+				}
 				queue.add(score);
 				currChainScore += score;
 				if(queue.size() == 4){
@@ -183,23 +183,7 @@ public class Field {
 					currChainScore -= queue.poll();
 					minScore = Math.min(minScore, currChainScore);
 				}
-				
-				if (currDisc == disc) {
-					if (c == column){
-						chainContainsDisc = true;
-					}
-					if (!stopChain)
-						chainLength++;
-				} else if(currDisc == 0){
-					if(chainContainsDisc){
-						stopChain = true;
-					} else {
-						chainLength = 0;
-					}
-				}
 			} else if(!chainContainsDisc) {
-				chainLength = 0;
-				//potentialChain = 0;
 				queue.clear();
 			}
 			
@@ -207,8 +191,6 @@ public class Field {
 				break;	
 		}
 		
-		//if(potentialChain >= 4)
-			//return chainLength;
 		if(queue.size() >= 4)
 			return minScore;
 		return -1;
