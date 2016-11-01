@@ -125,9 +125,69 @@ public class Field {
 		return -1;
 	}
 	
+	public boolean verticalWin(int column, int disc){
+		int chainLength = 0;
+		int maxChainLength = 0;
+		for(int row = 0; row < mRows; row++){
+			if(getDisc(column, row) == disc) {
+				chainLength++;
+			} else {
+				maxChainLength = Math.max(maxChainLength, chainLength);
+				chainLength = 0;
+			}
+		}
+		return (maxChainLength >= 4);
+	}
+	
+	public boolean horizontalWin(int row, int disc){
+		int chainLength = 0;
+		int maxChainLength = 0;
+		for(int column = 0; column < mCols; column++){
+			if(getDisc(column, row) == disc) {
+				chainLength++;
+			} else {
+				maxChainLength = Math.max(maxChainLength, chainLength);
+				chainLength = 0;
+			}
+		}
+		return (maxChainLength >= 4);
+	}
+	
+	public boolean ascendingDiagonalWin(int column, int row, int disc){
+		int chainLength = 0;
+		int maxChainLength = 0;
+		int r = row + Math.min(column, mRows - 1 - row);
+		for(int c = column - Math.min(column, mRows - 1 - row); c < mCols && r >= 0; c++){
+			if(getDisc(c, r) == disc) {
+				chainLength++;
+			} else {
+				maxChainLength = Math.max(maxChainLength, chainLength);
+				chainLength = 0;
+			}
+			r--;
+		}
+		return (maxChainLength >= 4);
+	}
+	
+	public boolean descendingDiagonalWin(int column, int row, int disc){
+		int chainLength = 0;
+		int maxChainLength = 0;
+		int r = row - Math.min(column, row);
+		for(int c = column - Math.min(column, row); c < mCols && r < mRows; c++){
+			if(getDisc(c, r) == disc) {
+				chainLength++;
+			} else {
+				maxChainLength = Math.max(maxChainLength, chainLength);
+				chainLength = 0;
+			}
+			r++;
+		}
+		return (maxChainLength >= 4);
+	}
+	
 	/**
 	 * returns minimum number of discs to add in order to make a vertical win if disc is placed in "column"
-	 * discards (returns -1) if chain can not attain 4 in the future
+	 * discards (returns MAX_VALUE) if chain can not attain 4 in the future
 	 * @param column
 	 * @param disc
 	 * @return
@@ -136,7 +196,6 @@ public class Field {
 		int chainLength = 0;
 		int potentialChain = 0;
 		int score = 0;
-		Queue<Integer> queue = new LinkedList<>();
 
 		for(int r = 0; r < mRows; r++) {			
 			int currDisc = getDisc(column, r);
@@ -155,28 +214,29 @@ public class Field {
 			score = 4 - chainLength;
 			return score;
 		}
-		return -1;
+		return Integer.MAX_VALUE;
 	}
 	
 	public int horizontalTurnsToWin(int column, int row, int disc){
 		boolean chainContainsDisc = false;
-		int score = 0;
+		int columnScore = 0;
 		int currChainScore = 0;
 		int minScore = 0;
 		Queue<Integer> queue = new LinkedList<>();
 		
-		for(int c = 0; c < mCols; c++) {			
+		for(int c = 0; c < mCols; c++) {
 			int currDisc = getDisc(c, row);
 			if(currDisc == disc || currDisc == 0){
 				if(c == column){
-					score = 0;
-					if(currDisc == disc)
-						chainContainsDisc = true;
-				} else {
-					score = row - rowIfAddDisc(c);
+					chainContainsDisc = true;
 				}
-				queue.add(score);
-				currChainScore += score;
+				if(currDisc == disc) {
+					columnScore = 0;
+				} else {
+					columnScore = rowIfAddDisc(c) - row + 1;
+				}
+				queue.add(columnScore);
+				currChainScore += columnScore;
 				if(queue.size() == 4){
 					minScore = currChainScore;
 				} else if(queue.size() > 4){
@@ -185,6 +245,9 @@ public class Field {
 				}
 			} else if(!chainContainsDisc) {
 				queue.clear();
+				columnScore = 0;
+				currChainScore = 0;
+				minScore = 0;
 			}
 			
 			if(currDisc != 0 && currDisc != disc && chainContainsDisc)
@@ -193,195 +256,112 @@ public class Field {
 		
 		if(queue.size() >= 4)
 			return minScore;
-		return -1;
-	}
-	
-	
-	/**
-	 * returns length of max chain containing the disc added in "column"
-	 * discards (returns 1) if chain can not attain 4 in the future
-	 * @param column
-	 * @param disc
-	 * @return
-	 */
-	public int verticalChain(int column, int row, int disc){
-		int chainLength = 0;
-		int potentialChain = 0;
-		boolean chainContainsDisc = false;
-		boolean stopChain = false;
-		for(int r = 0; r < mRows; r++) {
-			
-			//System.out.print(getDisc(column, r));
-			
-			int currDisc = getDisc(column, r);
-			if (currDisc == disc) {
-				if (r == row)
-					chainContainsDisc = true;
-				if (!stopChain)
-					chainLength++;
-				potentialChain++;
-			} else if (!chainContainsDisc) {
-				chainLength = 0;
-				if(currDisc == 0)
-					potentialChain++;
-				else
-					potentialChain = 0;
-			} else {
-				stopChain = true;
-				if (currDisc == 0)
-					potentialChain++;
-				else
-					break;
-			}
-		}
-		
-		//System.out.println();
-		//System.out.println("max vertical chain = " + maxChain);
-		
-		if(potentialChain >= 4)
-			return chainLength;
-		return 1;
-	}
-	
-	public int horizontalChain(int column, int row, int disc){
-		int chainLength = 0;
-		int potentialChain = 0;
-		boolean chainContainsDisc = false;
-		boolean stopChain = false;
-		
-		for(int c = 0; c < mCols; c++) {			
-			int currDisc = getDisc(c, row);
-			if (currDisc == disc) {
-				if (c == column)
-					chainContainsDisc = true;
-				if (!stopChain)
-					chainLength++;
-				potentialChain++;
-			} else if (!chainContainsDisc) {
-				chainLength = 0;
-				if(currDisc == 0)
-					potentialChain++;
-				else
-					potentialChain = 0;
-			} else {
-				stopChain = true;
-				if (currDisc == 0)
-					potentialChain++;
-				else
-					break;
-			}
-		}
-		if(potentialChain >= 4)
-			return chainLength;
-		return 1;
-		
-		/*
-		int chainLength = 0;
-		boolean chainContainsDisc = false;
-		for(int c = 0; c < mCols; c++) {			
-			if (getDisc(c, row) == disc) {
-				chainLength++;
-				if(c == column)
-					chainContainsDisc = true;
-			} else if (!chainContainsDisc) {
-				chainLength = 0;
-			} else
-				break;
-		}		
-		return chainLength;
-		*/
-		
-		//System.out.print(getDisc(c, r));
+		return Integer.MAX_VALUE;
 	}
 	
 	/**
-	 * returns length of longest diagonal chain of "disc" discs
-	 * checking ascending and descending diagonals
+	 * returns minimum number of discs to add in order to make a desc. diagonal win if disc is placed in "column"
+	 * discards (returns MAX_VALUE) if chain can not attain 4 in the future
 	 * @param column
 	 * @param row
 	 * @param disc
 	 * @return
 	 */
-	public int diagonalChain(int column, int row, int disc){
-		int maxChain = 0;
-		int maxPotentialChain = 0;
-
-		//descending
-		int chainLength = 0;
-		int potentialChain = 0;
+	public int descendingDiagonalTurnsToWin(int column, int row, int disc){
 		boolean chainContainsDisc = false;
-		boolean stopChain = false;
+		int columnScore = 0;
+		int currChainScore = 0;
+		int minScore = 0;
+		Queue<Integer> queue = new LinkedList<>();
 
 		int r = row - Math.min(column, row);
 		for(int c = column - Math.min(column, row); c < mCols && r < mRows; c++) {
 			int currDisc = getDisc(c, r);
-			if (currDisc == disc) {
-				if (c == column)
+			if(currDisc == disc || currDisc == 0){
+				if(c == column){
 					chainContainsDisc = true;
-				if (!stopChain)
-					chainLength++;
-				potentialChain++;
-			} else if (!chainContainsDisc) {
-				chainLength = 0;
-				if(currDisc == 0)
-					potentialChain++;
-				else
-					potentialChain = 0;
-			} else {
-				stopChain = true;
-				if (currDisc == 0)
-					potentialChain++;
-				else
-					break;
+				}
+				if(currDisc == disc) {
+					columnScore = 0;
+				} else {
+					columnScore = rowIfAddDisc(c) - r + 1;
+				}				
+				queue.add(columnScore);
+				currChainScore += columnScore;
+				if(queue.size() == 4){
+					minScore = currChainScore;
+				} else if(queue.size() > 4){
+					currChainScore -= queue.poll();
+					minScore = Math.min(minScore, currChainScore);
+				}
+			} else if(!chainContainsDisc) {
+				queue.clear();
+				columnScore = 0;
+				currChainScore = 0;
+				minScore = 0;
 			}
+			
+			if(currDisc != 0 && currDisc != disc && chainContainsDisc)
+				break;	
+			
 			r++;
 		}
 		
-		maxChain = chainLength;
-		maxPotentialChain = potentialChain;
+		if(queue.size() >= 4)
+			return minScore;
+		return Integer.MAX_VALUE;
+	}
+	
+	/**
+	 * returns minimum number of discs to add in order to make an asc. diagonal win if disc is placed in "column"
+	 * discards (returns MAX_VALUE) if chain can not attain 4 in the future
+	 * @param column
+	 * @param row
+	 * @param disc
+	 * @return
+	 */
+	public int ascendingDiagonalTurnsToWin(int column, int row, int disc){		
+		boolean chainContainsDisc = false;
+		int columnScore = 0;
+		int currChainScore = 0;
+		int minScore = 0;
+		Queue<Integer> queue = new LinkedList<>();
 		
-		//System.out.println();
-		//System.out.println("max descending chain = " + maxChain);
-		
-		//ascending
-		chainLength = 0;
-		potentialChain = 0;
-		chainContainsDisc = false;
-		stopChain = false;
-		
-		r = row + Math.min(column, mRows - 1 - row);
+		int r = row + Math.min(column, mRows - 1 - row);
 		for(int c = column - Math.min(column, mRows -1 - row); c < mCols && r >= 0; c++) {
 			int currDisc = getDisc(c, r);
-			if (currDisc == disc) {
-				if (c == column)
+			if(currDisc == disc || currDisc == 0){
+				if(c == column){
 					chainContainsDisc = true;
-				if (!stopChain)
-					chainLength++;
-				potentialChain++;
-			} else if (!chainContainsDisc) {
-				chainLength = 0;
-				if(currDisc == 0)
-					potentialChain++;
-				else
-					potentialChain = 0;
-			} else {
-				stopChain = true;
-				if (currDisc == 0)
-					potentialChain++;
-				else
-					break;
+				}
+				if(currDisc == disc) {
+					columnScore = 0;
+				} else {
+					columnScore = rowIfAddDisc(c) - r + 1;
+				}
+				queue.add(columnScore);
+				currChainScore += columnScore;
+				if(queue.size() == 4){
+					minScore = currChainScore;
+				} else if(queue.size() > 4){
+					currChainScore -= queue.poll();
+					minScore = Math.min(minScore, currChainScore);
+				}
+			} else if(!chainContainsDisc) {
+				queue.clear();
+				columnScore = 0;
+				currChainScore = 0;
+				minScore = 0;
 			}
+			
+			if(currDisc != 0 && currDisc != disc && chainContainsDisc)
+				break;
 			r--;
 		}
-
-		//System.out.println();
-		//System.out.println("max diagonal chain = " + maxChain);
 		
-		maxChain = Math.max(maxChain, chainLength);
-		maxPotentialChain = Math.max(maxPotentialChain, potentialChain);
-		if(maxPotentialChain >= 4)
-			return maxChain;
-		return 1;
+		if(queue.size() >= 4)
+			return minScore;
+		return Integer.MAX_VALUE;
 	}
 	
 	/**

@@ -38,119 +38,55 @@ public class BotStarter {
      * @return The column where the turn was made.
      */
     public int makeTurn() {
-        	
-    	//TODO: chaine en vertical > chaine en horizontal > chaine en diagonale
-    	
-    	/**
-    	 * PRIORITIES:
-    	 * 1: win (4 in a row)
-    	 * 2: not lose (block a chain of 3 ennemies)
-    	 * 3: continue a chain (3 in a row)
-    	 * 4: continue a chain (2 in a row)
-    	 * 5: block a chain (block a chain of 2 ennemies)
-    	 * 6: block a chain (block a chain of 1 ennemies)
-    	 * 7: other
-    	 */
-    	int priority = 8;
+    	int priority = Integer.MAX_VALUE;
 		int move = -1;
 		int ennemyBotId = BotParser.mBotId % 2 + 1;
 		
-		for(int column = 0; column < field.getNrColumns() && priority > 1; column++){
-			System.out.println("\n" + column);
-			if(!(field.isColumnFull(column))){
-				
-				//System.out.println("currently examining column " + column);
-				
+		for(int column = 0; column < field.getNrColumns() && priority > 0; column++){
+			if(!(field.isColumnFull(column))){				
 				int row = field.rowIfAddDisc(column);
-				//System.out.println(field.toString());
 				
 				Field cloneField = new Field(field);
 				cloneField.addDisc(column, BotParser.mBotId);
-				
-				int maxPlayerChain = Math.max(Math.max(cloneField.verticalChain(column, row, BotParser.mBotId),
-						cloneField.horizontalChain(column, row, BotParser.mBotId)),
-						cloneField.diagonalChain(column, row, BotParser.mBotId));
-				
-				System.out.println(maxPlayerChain);
-				
-				if(maxPlayerChain >= 4) {
+				//go if easy win
+				if(cloneField.verticalWin(column, BotParser.mBotId)
+						|| cloneField.horizontalWin(row, BotParser.mBotId)
+						|| cloneField.ascendingDiagonalWin(column, row, BotParser.mBotId)
+						|| cloneField.descendingDiagonalWin(column, row, BotParser.mBotId)) {
 					move = column;
-					priority = 1;
-					//System.out.println("priority : 1");
-				} else if (priority > 2) {
-					
-					if(!cloneField.isColumnFull(column)){
-						//if making this move lets the opponent win on the next turn, do not play it
-						Field futureField = new Field(cloneField);
-						int futureRow = futureField.rowIfAddDisc(column);
-						futureField.addDisc(column, ennemyBotId);
-						int maxEnnemy = Math.max(Math.max(futureField.verticalChain(column, futureRow, ennemyBotId),
-								futureField.horizontalChain(column, futureRow, ennemyBotId)),
-								futureField.diagonalChain(column, futureRow, ennemyBotId));
-						//System.out.println(maxEnnemy + "\n");
-						if (maxEnnemy >= 4)
-							continue;
-					}
-					
-					//System.out.println();
-					cloneField = new Field(field);
-					//System.out.println(cloneField.toString());
-					cloneField.addDisc(column, ennemyBotId);
-					int maxEnnemyChain = Math.max(Math.max(cloneField.verticalChain(column, row, ennemyBotId),
-							cloneField.horizontalChain(column, row, ennemyBotId)),
-							cloneField.diagonalChain(column, row, ennemyBotId));
-					
-					System.out.println(maxEnnemyChain);
-					
-					if(maxEnnemyChain >= 4) {
+					priority = 0;
+				} else {
+					//go if blocks ennemy easy win
+					Field ennemyCloneField = new Field(field);
+					ennemyCloneField.addDisc(column, ennemyBotId);
+					if (ennemyCloneField.verticalWin(column, ennemyBotId)
+						|| ennemyCloneField.horizontalWin(row, ennemyBotId)
+						|| ennemyCloneField.ascendingDiagonalWin(column, row, ennemyBotId)
+						|| ennemyCloneField.descendingDiagonalWin(column, row, ennemyBotId)) {
 						move = column;
-						priority = 2;
-						//System.out.println("priority : 2");
-					} else if (maxPlayerChain >= maxEnnemyChain) {
-						switch(maxPlayerChain) {
-						case 2:
-							if(priority > 4) {
-								move = column;
-								priority = 4;
-								//System.out.println("priority : 4");
-							}
-							break;
-						case 3:
-							if(priority > 3) {
-								move = column;
-								priority = 3;
-								//System.out.println("priority : 3");
-							}
-							break;
-						default:
-							if(priority > 7) {
-								move = column;
-								priority = 7;
-								//System.out.println("priority : 7");
-							}
+						priority = 1;
+					} else if(priority > 1) {
+						//check if move will not help ennemy win on next turn
+						if(!cloneField.isColumnFull(column)){
+							Field futureField = new Field(cloneField);
+							int futureRow = futureField.rowIfAddDisc(column);
+							futureField.addDisc(column, ennemyBotId);
+							if (futureField.verticalWin(column, ennemyBotId)
+									|| futureField.horizontalWin(futureRow, ennemyBotId)
+									|| futureField.ascendingDiagonalWin(column, futureRow, ennemyBotId)
+									|| futureField.descendingDiagonalWin(column, futureRow, ennemyBotId))
+								continue;
 						}
-					} else {
-						switch(maxEnnemyChain) {
-						case 2:
-							if(priority > 6) {
-								move = column;
-								priority = 6;
-								//System.out.println("priority : 6");
-							}
-							break;
-						case 3:
-							if(priority > 5) {
-								move = column;
-								priority = 5;
-								//System.out.println("priority : 5");
-							}
-							break;
-						default:
-							if(priority > 7) {
-								move = column;
-								priority = 7;
-								//System.out.println("priority : 7");
-							}
+						
+						//if it's ok, check if it is a better move than before
+						int minPlayerTurnsToWin = Math.min(
+								Math.min(cloneField.verticalTurnsToWin(column, row, BotParser.mBotId),
+										cloneField.horizontalTurnsToWin(column, row, BotParser.mBotId)),
+								Math.min(cloneField.ascendingDiagonalTurnsToWin(column, row, BotParser.mBotId),
+										cloneField.descendingDiagonalTurnsToWin(column, row, BotParser.mBotId)));
+						if(minPlayerTurnsToWin < Integer.MAX_VALUE && priority > minPlayerTurnsToWin + 1){
+							move = column;
+							priority = minPlayerTurnsToWin + 1;
 						}
 					}
 				}
