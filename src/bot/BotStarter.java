@@ -38,7 +38,7 @@ public class BotStarter {
      * @return The column where the turn was made.
      */
     public int makeTurn() {
-    	
+        	
     	//TODO: chaine en vertical > chaine en horizontal > chaine en diagonale
     	
     	/**
@@ -52,7 +52,7 @@ public class BotStarter {
     	 * 7: other
     	 */
     	int priority = 8;
-		int move = 0;
+		int move = -1;
 		int ennemyBotId = BotParser.mBotId % 2 + 1;
 		
 		for(int column = 0; column < field.getNrColumns() && priority > 1; column++){
@@ -157,6 +157,12 @@ public class BotStarter {
 			}
 		}
 		//System.out.println("move = " + move);
+		if(move == -1){
+			move = 0;
+			while(field.isColumnFull(move)){
+				move++;
+			}
+		}
         return move;
     }
     
