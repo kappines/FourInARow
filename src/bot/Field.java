@@ -142,6 +142,7 @@ public class Field {
 				chainLength = 0;
 			}
 		}
+		maxChainLength = Math.max(maxChainLength, chainLength);
 		return (maxChainLength >= 4);
 	}
 	
@@ -156,6 +157,7 @@ public class Field {
 				chainLength = 0;
 			}
 		}
+		maxChainLength = Math.max(maxChainLength, chainLength);
 		return (maxChainLength >= 4);
 	}
 	
@@ -172,6 +174,7 @@ public class Field {
 			}
 			r--;
 		}
+		maxChainLength = Math.max(maxChainLength, chainLength);
 		return (maxChainLength >= 4);
 	}
 	
@@ -188,6 +191,7 @@ public class Field {
 			}
 			r++;
 		}
+		maxChainLength = Math.max(maxChainLength, chainLength);
 		return (maxChainLength >= 4);
 	}
 	
