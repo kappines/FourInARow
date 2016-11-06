@@ -31,6 +31,12 @@ import javax.print.attribute.standard.MediaSize.Other;
 
 public class BotStarter {	
     Field field;
+    
+    final int MAKE_SIMPLE_WIN = -4;
+    final int COUNTER_SIMPLE_WIN = -3;
+    final int MAKE_COMPLEX_WIN = -2;
+    final int COUNTER_COMPLEX_WIN = -1;
+    final int LOWEST_PRIORITY = MAKE_SIMPLE_WIN;
 
     /**
      * Makes a turn. Edit this method to make your bot smarter.
@@ -38,62 +44,69 @@ public class BotStarter {
      * @return The column where the turn was made.
      */
     public int makeTurn() {
+    	//TODO : bloquer si ça crée une situation où deux positions seront gagnantes
+    	
+    	
     	int priority = Integer.MAX_VALUE;
 		int move = -1;
 		int ennemyBotId = BotParser.mBotId % 2 + 1;
 		
-		for(int column = 0; column < field.getNrColumns() && priority > 0; column++){
+		for(int column = 0; column < field.getNrColumns() && priority > LOWEST_PRIORITY; column++){
 			System.err.println("\n" + "Examining column: " + column);
-			if(!(field.isColumnFull(column))){				
+			if(!(field.isColumnFull(column))){
 				int row = field.rowIfAddDisc(column);
 				
 				Field cloneField = new Field(field);
 				cloneField.addDisc(column, BotParser.mBotId);
-				//go if easy win
-				if(cloneField.verticalWin(column, BotParser.mBotId)
-						|| cloneField.horizontalWin(row, BotParser.mBotId)
-						|| cloneField.ascendingDiagonalWin(column, row, BotParser.mBotId)
-						|| cloneField.descendingDiagonalWin(column, row, BotParser.mBotId)) {
+				//go if simple win
+				if(cloneField.simpleWin(column, row, BotParser.mBotId)) {
 					move = column;
-					priority = 0;
+					priority = MAKE_SIMPLE_WIN;
 					System.err.println("winning");
 				} else {
-					//go if blocks ennemy easy win
+					//go if blocks ennemy simple win
 					Field ennemyCloneField = new Field(field);
 					ennemyCloneField.addDisc(column, ennemyBotId);
-					if (ennemyCloneField.verticalWin(column, ennemyBotId)
-						|| ennemyCloneField.horizontalWin(row, ennemyBotId)
-						|| ennemyCloneField.ascendingDiagonalWin(column, row, ennemyBotId)
-						|| ennemyCloneField.descendingDiagonalWin(column, row, ennemyBotId)) {
+					if (ennemyCloneField.simpleWin(column, row, ennemyBotId)) {
 						move = column;
-						priority = 1;
+						priority = COUNTER_SIMPLE_WIN;
 						System.err.println("not losing");
-					} else if(priority > 1) {
+					} else if(priority > MAKE_COMPLEX_WIN) {
 						//check if move will not help ennemy win on next turn
 						if(!cloneField.isColumnFull(column)){
 							Field futureField = new Field(cloneField);
 							int futureRow = futureField.rowIfAddDisc(column);
 							futureField.addDisc(column, ennemyBotId);
-							if (futureField.verticalWin(column, ennemyBotId)
-									|| futureField.horizontalWin(futureRow, ennemyBotId)
-									|| futureField.ascendingDiagonalWin(column, futureRow, ennemyBotId)
-									|| futureField.descendingDiagonalWin(column, futureRow, ennemyBotId)){
+							if (futureField.simpleWin(column, futureRow, ennemyBotId)){
 								System.err.println("Don't play, helps ennemy win");
 								continue;
 							}
 						}
 						
-						//if it's ok, check if it is a better move than before
-						int minPlayerTurnsToWin = Math.min(
-								Math.min(cloneField.verticalTurnsToWin(column, row, BotParser.mBotId),
-										cloneField.horizontalTurnsToWin(column, row, BotParser.mBotId)),
-								Math.min(cloneField.ascendingDiagonalTurnsToWin(column, row, BotParser.mBotId),
-										cloneField.descendingDiagonalTurnsToWin(column, row, BotParser.mBotId)));
-						System.err.println("minimum turns to win: " + minPlayerTurnsToWin);
-						if(minPlayerTurnsToWin < Integer.MAX_VALUE && priority > minPlayerTurnsToWin + 1){
+						//go if complex win
+						if(cloneField.unavoidableWin(column, row, BotParser.mBotId)){
 							move = column;
-							priority = minPlayerTurnsToWin + 1;
-							System.err.println("Priority changed to " + priority);
+							priority = MAKE_COMPLEX_WIN;
+							System.err.println("winning");
+						} else if (priority > COUNTER_COMPLEX_WIN){
+							if(ennemyCloneField.unavoidableWin(column, row, ennemyBotId)){
+								move = column;
+								priority = COUNTER_COMPLEX_WIN;
+								System.err.println("not losing");
+							} else if (priority > 0){
+								//check if it is a better move than before
+								int minPlayerTurnsToWin = Math.min(
+										Math.min(cloneField.verticalTurnsToWin(column, row, BotParser.mBotId),
+												cloneField.horizontalTurnsToWin(column, row, BotParser.mBotId)),
+										Math.min(cloneField.ascendingDiagonalTurnsToWin(column, row, BotParser.mBotId),
+												cloneField.descendingDiagonalTurnsToWin(column, row, BotParser.mBotId)));
+								System.err.println("minimum turns to win: " + minPlayerTurnsToWin);
+								if(priority > minPlayerTurnsToWin){
+									move = column;
+									priority = minPlayerTurnsToWin;
+									System.err.println("Priority changed to " + priority);
+								}
+							}
 						}
 					}
 				}

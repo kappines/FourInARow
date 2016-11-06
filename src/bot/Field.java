@@ -92,12 +92,12 @@ public class Field {
 	 * @param args : command line arguments passed on running of application
 	 * @return : true if disc fits, otherwise false
 	 */
-	public Boolean addDisc(int column, int disc) {
+	public Boolean addDisc(int column, int botId) {
 		mLastError = "";
 		if (column < mCols) {
 			for (int y = mRows-1; y >= 0; y--) { // From bottom column up
 				if (mBoard[column][y] == 0) {
-					mBoard[column][y] = disc;
+					mBoard[column][y] = botId;
 					mLastColumn = column;
 					return true;
 				}
@@ -128,14 +128,14 @@ public class Field {
 	/**
 	 * check if there's a vertical win
 	 * @param column
-	 * @param disc
+	 * @param botId
 	 * @return
 	 */
-	public boolean verticalWin(int column, int disc){
+	public boolean verticalWin(int column, int botId){
 		int chainLength = 0;
 		int maxChainLength = 0;
 		for(int row = 0; row < mRows; row++){
-			if(getDisc(column, row) == disc) {
+			if(getDisc(column, row) == botId) {
 				chainLength++;
 			} else {
 				maxChainLength = Math.max(maxChainLength, chainLength);
@@ -146,11 +146,11 @@ public class Field {
 		return (maxChainLength >= 4);
 	}
 	
-	public boolean horizontalWin(int row, int disc){
+	public boolean horizontalWin(int row, int botId){
 		int chainLength = 0;
 		int maxChainLength = 0;
 		for(int column = 0; column < mCols; column++){
-			if(getDisc(column, row) == disc) {
+			if(getDisc(column, row) == botId) {
 				chainLength++;
 			} else {
 				maxChainLength = Math.max(maxChainLength, chainLength);
@@ -161,12 +161,12 @@ public class Field {
 		return (maxChainLength >= 4);
 	}
 	
-	public boolean ascendingDiagonalWin(int column, int row, int disc){
+	public boolean ascendingDiagonalWin(int column, int row, int botId){
 		int chainLength = 0;
 		int maxChainLength = 0;
 		int r = row + Math.min(column, mRows - 1 - row);
 		for(int c = column - Math.min(column, mRows - 1 - row); c < mCols && r >= 0; c++){
-			if(getDisc(c, r) == disc) {
+			if(getDisc(c, r) == botId) {
 				chainLength++;
 			} else {
 				maxChainLength = Math.max(maxChainLength, chainLength);
@@ -178,12 +178,12 @@ public class Field {
 		return (maxChainLength >= 4);
 	}
 	
-	public boolean descendingDiagonalWin(int column, int row, int disc){
+	public boolean descendingDiagonalWin(int column, int row, int botId){
 		int chainLength = 0;
 		int maxChainLength = 0;
 		int r = row - Math.min(column, row);
 		for(int c = column - Math.min(column, row); c < mCols && r < mRows; c++){
-			if(getDisc(c, r) == disc) {
+			if(getDisc(c, r) == botId) {
 				chainLength++;
 			} else {
 				maxChainLength = Math.max(maxChainLength, chainLength);
@@ -196,13 +196,25 @@ public class Field {
 	}
 	
 	/**
+	 * returns true if 4 are aligned
+	 * @param column
+	 * @param row
+	 * @param botId
+	 * @return
+	 */
+	public boolean simpleWin(int column, int row, int botId){
+		return (verticalWin(column, botId) || horizontalWin(row, botId) 
+		|| ascendingDiagonalWin(column, row, botId) || descendingDiagonalWin(column, row, botId));
+	}
+	
+	/**
 	 * returns minimum number of discs to add in order to make a vertical win if disc is placed in "column"
 	 * discards (returns MAX_VALUE) if chain can not attain 4 in the future
 	 * @param column
-	 * @param disc
+	 * @param botId
 	 * @return
 	 */
-	public int verticalTurnsToWin(int column, int row, int disc){
+	public int verticalTurnsToWin(int column, int row, int botId){
 		int chainLength = 0;
 		int potentialChain = 0;
 		int score = 0;
@@ -211,7 +223,7 @@ public class Field {
 			int currDisc = getDisc(column, r);
 			if(currDisc == 0){
 				potentialChain++;
-			} else if (currDisc == disc) {
+			} else if (currDisc == botId) {
 				chainLength++;
 				potentialChain++;
 			} else {
@@ -227,7 +239,7 @@ public class Field {
 		return Integer.MAX_VALUE;
 	}
 	
-	public int horizontalTurnsToWin(int column, int row, int disc){
+	public int horizontalTurnsToWin(int column, int row, int botId){
 		boolean chainContainsDisc = false;
 		int columnScore = 0;
 		int currChainScore = 0;
@@ -236,11 +248,11 @@ public class Field {
 		
 		for(int c = 0; c < mCols; c++) {
 			int currDisc = getDisc(c, row);
-			if(currDisc == disc || currDisc == 0){
+			if(currDisc == botId || currDisc == 0){
 				if(c == column){
 					chainContainsDisc = true;
 				}
-				if(currDisc == disc) {
+				if(currDisc == botId) {
 					columnScore = 0;
 				} else {
 					columnScore = rowIfAddDisc(c) - row + 1;
@@ -260,7 +272,7 @@ public class Field {
 				minScore = 0;
 			}
 			
-			if(currDisc != 0 && currDisc != disc && chainContainsDisc)
+			if(currDisc != 0 && currDisc != botId && chainContainsDisc)
 				break;	
 		}
 		
@@ -276,10 +288,10 @@ public class Field {
 	 * discards (returns MAX_VALUE) if chain can not attain 4 in the future
 	 * @param column
 	 * @param row
-	 * @param disc
+	 * @param botId
 	 * @return
 	 */
-	public int descendingDiagonalTurnsToWin(int column, int row, int disc){
+	public int descendingDiagonalTurnsToWin(int column, int row, int botId){
 		boolean chainContainsDisc = false;
 		int columnScore = 0;
 		int currChainScore = 0;
@@ -289,11 +301,11 @@ public class Field {
 		int r = row - Math.min(column, row);
 		for(int c = column - Math.min(column, row); c < mCols && r < mRows; c++) {
 			int currDisc = getDisc(c, r);
-			if(currDisc == disc || currDisc == 0){
+			if(currDisc == botId || currDisc == 0){
 				if(c == column){
 					chainContainsDisc = true;
 				}
-				if(currDisc == disc) {
+				if(currDisc == botId) {
 					columnScore = 0;
 				} else {
 					columnScore = rowIfAddDisc(c) - r + 1;
@@ -313,7 +325,7 @@ public class Field {
 				minScore = 0;
 			}
 			
-			if(currDisc != 0 && currDisc != disc && chainContainsDisc)
+			if(currDisc != 0 && currDisc != botId && chainContainsDisc)
 				break;	
 			
 			r++;
@@ -331,10 +343,10 @@ public class Field {
 	 * discards (returns MAX_VALUE) if chain can not attain 4 in the future
 	 * @param column
 	 * @param row
-	 * @param disc
+	 * @param botId
 	 * @return
 	 */
-	public int ascendingDiagonalTurnsToWin(int column, int row, int disc){		
+	public int ascendingDiagonalTurnsToWin(int column, int row, int botId){		
 		boolean chainContainsDisc = false;
 		int columnScore = 0;
 		int currChainScore = 0;
@@ -344,11 +356,11 @@ public class Field {
 		int r = row + Math.min(column, mRows - 1 - row);
 		for(int c = column - Math.min(column, mRows -1 - row); c < mCols && r >= 0; c++) {
 			int currDisc = getDisc(c, r);
-			if(currDisc == disc || currDisc == 0){
+			if(currDisc == botId || currDisc == 0){
 				if(c == column){
 					chainContainsDisc = true;
 				}
-				if(currDisc == disc) {
+				if(currDisc == botId) {
 					columnScore = 0;
 				} else {
 					columnScore = rowIfAddDisc(c) - r + 1;
@@ -368,7 +380,7 @@ public class Field {
 				minScore = 0;
 			}
 			
-			if(currDisc != 0 && currDisc != disc && chainContainsDisc)
+			if(currDisc != 0 && currDisc != botId && chainContainsDisc)
 				break;
 			r--;
 		}
@@ -378,6 +390,44 @@ public class Field {
 			return minScore;
 		}
 		return Integer.MAX_VALUE;
+	}
+	
+	boolean unavoidableWin(int column, int row, int botId){
+		//future win: if the two positions above can align 4 on the next turn (can't be blocked)
+		Field cloneField = new Field(this);
+		if(row >= 2){
+			cloneField.addDisc(column, botId);
+			if(simpleWin(column, row - 1, botId)){
+				cloneField = new Field(this);
+				cloneField.addDisc(column, botId % 2 + 1);
+				cloneField.addDisc(column, botId);
+				if (simpleWin(column, row - 2, botId)){
+					System.err.println("future win for player " + botId);
+					return true;
+				}
+			}
+		}
+		
+		//complex win: if two positions are available to align 4 on the next turn (can't be blocked)
+		int winningPos = 0;
+		for(int c = 0; c < mCols; c++){
+			if(!(isColumnFull(c))){
+				cloneField = new Field(this);
+				int r = cloneField.rowIfAddDisc(c);
+				cloneField.addDisc(c, botId);
+				if(cloneField.simpleWin(c, r, botId)){
+					winningPos++;
+					if (winningPos >= 2)
+						break;
+				}
+			}
+		}
+		if(winningPos >= 2){
+			System.err.println("complex win for player " + botId);
+			return true;
+		}
+		
+		return false;
 	}
 	
 	/**
