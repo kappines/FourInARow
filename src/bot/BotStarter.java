@@ -44,9 +44,6 @@ public class BotStarter {
      * @return The column where the turn was made.
      */
     public int makeTurn() {
-    	//TODO : bloquer si ça crée une situation où deux positions seront gagnantes
-    	
-    	
     	int priority = Integer.MAX_VALUE;
 		int move = -1;
 		int ennemyBotId = BotParser.mBotId % 2 + 1;
@@ -77,7 +74,8 @@ public class BotStarter {
 							Field futureField = new Field(cloneField);
 							int futureRow = futureField.rowIfAddDisc(column);
 							futureField.addDisc(column, ennemyBotId);
-							if (futureField.simpleWin(column, futureRow, ennemyBotId)){
+							if (futureField.simpleWin(column, futureRow, ennemyBotId)
+									|| cloneField.unavoidableWin(column, row, ennemyBotId)){
 								System.err.println("Don't play, helps ennemy win");
 								continue;
 							}

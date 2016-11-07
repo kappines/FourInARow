@@ -233,7 +233,7 @@ public class Field {
 		
 		if(potentialChain >= 4){
 			score = 4 - chainLength;
-			System.err.println("v: " + score);
+			//System.err.println("v: " + score);
 			return score;
 		}
 		return Integer.MAX_VALUE;
@@ -277,7 +277,7 @@ public class Field {
 		}
 		
 		if(queue.size() >= 4) {
-			System.err.println("h: " + minScore);
+			//System.err.println("h: " + minScore);
 			return minScore;
 		}
 		return Integer.MAX_VALUE;
@@ -332,7 +332,7 @@ public class Field {
 		}
 		
 		if(queue.size() >= 4) {
-			System.err.println("d: " + minScore);
+			//System.err.println("d: " + minScore);
 			return minScore;
 		}
 		return Integer.MAX_VALUE;
@@ -386,29 +386,65 @@ public class Field {
 		}
 		
 		if(queue.size() >= 4) {
-			System.err.println("a: " + minScore);
+			//System.err.println("a: " + minScore);
 			return minScore;
 		}
 		return Integer.MAX_VALUE;
 	}
 	
+	/**
+	 * returns true if the player with botId is sure to win in the future
+	 * @param column
+	 * @param row
+	 * @param botId
+	 * @return
+	 */
 	boolean unavoidableWin(int column, int row, int botId){
-		//future win: if the two positions above can align 4 on the next turn (can't be blocked)
-		Field cloneField = new Field(this);
-		if(row >= 2){
+		/*if(row >= 2){
 			cloneField.addDisc(column, botId);
 			if(simpleWin(column, row - 1, botId)){
 				cloneField = new Field(this);
 				cloneField.addDisc(column, botId % 2 + 1);
 				cloneField.addDisc(column, botId);
 				if (simpleWin(column, row - 2, botId)){
-					System.err.println("future win for player " + botId);
+					System.err.println("complex win 1 for player " + botId);
 					return true;
+				}
+			}
+		}*/
+		
+		//complex win 1: if two following positions in a column can align 4 on the next turn (can't be blocked)
+		Field cloneField;
+		Field futureField;
+		int futureRow;
+		int otherBotId = botId % 2 + 1;
+		for(int c = 0; c < mCols; c++){
+			if (!(isColumnFull(c))) {
+				cloneField = new Field(this);
+				futureRow = cloneField.rowIfAddDisc(c);
+				if(futureRow >= 1){
+					for(int r = futureRow; r >= 1; r--){
+						cloneField = new Field(this);
+						for(int i = 0; i < futureRow - r; i++){
+							cloneField.addDisc(c, otherBotId);
+						}
+						futureField = new Field(cloneField);
+						futureField.addDisc(c, botId);
+						if(futureField.simpleWin(c, r, botId)){
+							futureField = new Field(cloneField);
+							futureField.addDisc(c, otherBotId);
+							futureField.addDisc(c, botId);
+							if (futureField.simpleWin(c, r - 1, botId)){
+								System.err.println("complex win 1 for player " + botId);
+								return true;
+							}
+						}
+					}
 				}
 			}
 		}
 		
-		//complex win: if two positions are available to align 4 on the next turn (can't be blocked)
+		//complex win 2: if two positions are available to align 4 on the next turn (can't be blocked)
 		int winningPos = 0;
 		for(int c = 0; c < mCols; c++){
 			if(!(isColumnFull(c))){
@@ -426,6 +462,8 @@ public class Field {
 			System.err.println("complex win for player " + botId);
 			return true;
 		}
+		
+		
 		
 		return false;
 	}
