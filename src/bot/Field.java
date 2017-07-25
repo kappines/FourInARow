@@ -416,13 +416,13 @@ public class Field {
 	}
 	
 	/**
-	 * returns true if the player with botId is sure to win in the future
+	 * returns the number of turns to win if the player with botId is sure to win in the future, -1 otherwise
 	 * @param column
 	 * @param row
 	 * @param botId
 	 * @return
 	 */
-	boolean unavoidableWin(int column, int row, int botId){
+	int unavoidableWin(int column, int row, int botId){
 		/*if(row >= 2){
 			cloneField.addDisc(column, botId);
 			if(simpleWin(column, row - 1, botId)){
@@ -435,6 +435,8 @@ public class Field {
 				}
 			}
 		}*/
+		
+		int turnsToWin = Integer.MAX_VALUE;
 		
 		//complex win 1: if two following positions in any column can align 4 on the next turn (can't be blocked)
 		Field cloneField;
@@ -459,7 +461,7 @@ public class Field {
 							futureField.addDisc(c, botId);
 							if (futureField.simpleWin(c, r - 1, botId)){
 								System.err.println("complex win 1 for player " + botId);
-								return true;
+								turnsToWin = Math.min(turnsToWin, 2 * (futureRow - r + 1));
 							}
 						}
 					}
@@ -483,11 +485,12 @@ public class Field {
 		}
 		if(winningPos >= 2){
 			System.err.println("complex win 2 for player " + botId);
-			return true;
+			turnsToWin = Math.min(turnsToWin, 2);
 		}
 		
-		
-		return false;
+		if (turnsToWin == Integer.MAX_VALUE)
+			turnsToWin = -1;
+		return turnsToWin;
 	}
 	
 	/**

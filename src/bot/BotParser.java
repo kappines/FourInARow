@@ -36,9 +36,11 @@ settings your_botid 1
 settings field_columns 7
 settings field_rows 6
 update game round 1
-update game field 0,0,0,0,0,0,0;0,0,0,0,0,0,0;0,0,0,0,0,0,0;0,0,0,0,0,0,0;0,0,0,0,0,0,0;0,0,0,0,0,0,0
+update game field 0,0,0,0,0,0,0;0,0,0,0,0,0,0;2,0,0,1,0,0,0;1,1,0,2,2,0,0;1,1,0,2,2,0,0;1,2,2,2,1,0,0
 action move 10000
  */
+
+//update game field 0,0,0,0,0,0,0;0,0,0,0,0,0,0;0,0,0,0,0,0,0;0,0,0,0,0,0,0;0,0,0,0,0,0,0;0,0,0,0,0,0,0
 
 public class BotParser {
     
