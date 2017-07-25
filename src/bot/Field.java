@@ -208,6 +208,29 @@ public class Field {
 	}
 	
 	/**
+	 * returns the number of the free spaces directly touching the given position
+	 * @param column
+	 * @param row
+	 * @return
+	 */
+	public int freeAdjacentSpaces(int column, int row) {
+		int freeSpaces = 0;
+		int r = 0;
+		for (int c = column - 1; c <= column + 1; c += 2) {
+			if (c >= 0 && c < mCols) {
+				for (r = Math.max(row - 1, 0); r < Math.min(row + 2, mRows); r++) {
+					if (this.getDisc(c, r) == 0)
+						freeSpaces++;
+				}
+			}
+		}
+		if (row > 0) {
+			freeSpaces++;
+		}
+		return freeSpaces;
+	}
+	
+	/**
 	 * returns minimum number of discs to add in order to make a vertical win if disc is placed in "column"
 	 * discards (returns MAX_VALUE) if chain can not attain 4 in the future
 	 * @param column
@@ -413,7 +436,7 @@ public class Field {
 			}
 		}*/
 		
-		//complex win 1: if two following positions in a column can align 4 on the next turn (can't be blocked)
+		//complex win 1: if two following positions in any column can align 4 on the next turn (can't be blocked)
 		Field cloneField;
 		Field futureField;
 		int futureRow;
@@ -459,10 +482,9 @@ public class Field {
 			}
 		}
 		if(winningPos >= 2){
-			System.err.println("complex win for player " + botId);
+			System.err.println("complex win 2 for player " + botId);
 			return true;
 		}
-		
 		
 		
 		return false;
